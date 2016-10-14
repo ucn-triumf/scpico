@@ -33,12 +33,6 @@ extern "C" {
   /* a frontend status page is displayed with this frequency in ms */
   INT display_period = 0000;
 
-/*polarity of jonctions. 1 or -1 */
-  INT begin_run=0;
-
-/*polarity of jonctions. 1 or -1 */
-  INT polarity = 0;
-
   /* maximum event size produced by this frontend */
   INT max_event_size = 10000;
 
@@ -124,284 +118,38 @@ HNDLE hmyFlag;
 #ifdef __cplusplus
 extern "C" {
 #endif
-  //----------------------------------------------------------------
-  //set voltage source to v volts and choose auto range. the ilim is by default 2.5e-5 A.
-  int set_v(float v) {
-    char mscbstr[64];
-    
-    // sprintf(mscbstr, "*RST;\0");
-    //  mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1); \
-    //    ss_sleep(500);
-    if (abs(v)<10)
-      {
-	sprintf(mscbstr, "!SOUR:VOLT:RANG 10\0");
-	
-      }
-    else if (abs(v)<50)
-      {
-	sprintf(mscbstr, "!SOUR:VOLT:RANG 50\0");
-	
-      }
-    
-    else if (abs(v)<500)
-      {
-	sprintf(mscbstr, "!SOUR:VOLT:RANG 500\0");
-	
-      }
-    else
-      {
-	printf("Error, invalide voltage. Must be -500< V < 500 .  \n");
-	return -1;
-      }
-    
-    printf("ready for writting:%s \n", mscbstr);
-    mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-    ss_sleep(500);
-    
-    sprintf(mscbstr, "!SOUR:VOLT %g;\0",v);
-    printf("ready for writting:%s \n", mscbstr);
-    mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-    ss_sleep(500);
-    
-    sprintf(mscbstr, "!SOUR:VOLT:STAT ON;\0");
-    printf("ready for writting:%s \n", mscbstr);
-    mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-    ss_sleep(500);
 
-    sprintf(mscbstr, "READ?\0");
-    mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-    ss_sleep(500);
-    
-    return 0;
-    
-  };
-
-  //-------------------------------------------------------
-//Turn voltage source off but keep settings.
-void v_off(){
-char mscbstr[64];
-sprintf(mscbstr, "!SOUR:VOLT:STAT OFF;\0");
-printf("ready for writting:%s \n", mscbstr);
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-ss_sleep(2300);
-};
-
-  //-------------------------------------------------------
-//Turn voltage source on but keep settings.
-void v_on(){
-char mscbstr[64];
-sprintf(mscbstr, "!SOUR:VOLT:STAT ON;\0");
-printf("ready for writting:%s \n", mscbstr);
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-ss_sleep(500);
-};
-
-
-  //-------------------------------------------------------
-//set ilim at 2.5e-(value). choice for value are: 5, 4, 3 or 2. (2.5e-2 not available for v>10) If the value is not permitted, ilim=lowest.
-void set_ilim(int ilim){
-char mscbstr[64];
-
-sprintf(mscbstr, "!*RST;\0");
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-ss_sleep(500);
-if (ilim==4)
-{
-sprintf(mscbstr, "!SOUR:VOLT:ILIM 2.5E-4;\0");
-
-}
-else if (ilim == 3)
-{
-sprintf(mscbstr, "!SOUR:VOLT:ILIM 2.5E-3;\0");
-
-}
-
-else if (ilim == 2)
-{
-sprintf(mscbstr, "!SOUR:VOLT:RANG 10;\0");
-printf("ready for writting:%s \n", mscbstr);
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-ss_sleep(2300);
-sprintf(mscbstr, "!SOUR:VOLT:ILIM 2.5E-2;\0");
-
-}
-else
-{
-sprintf(mscbstr, "!SOUR:VOLT:ILIM 2.5E-5;\0");
-}
-printf("ready for writting:%s \n", mscbstr);
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-ss_sleep(2300);
-
-};
-
-//-------------------------------------------------------
-// return 0 if ok and -1 if error. Set current range with the entry: m(mili),u(micro) or n(nano)and scale: 2,20 or 200.
-  int set_curr_range(char range_param[2], int range_param_value)
-{
-  char mscbstr[64];
-
-	if (range_param_value == 0)
-		sprintf(mscbstr, "!SENS:CURR:RANG:AUTO ON;\0");
-	else{
-
-	  //		sprintf(mscbstr, "'SENS:CURR:RANG:AUTO Off'\0");
-
-		switch (range_param[0])
-		{
-		case  'm':
-
-			if (range_param_value == 20)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-2;\0");
-			else if (range_param_value == 2)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-3;\0");
-			else
-			{
-				printf("Error, Value must be  : 2 or 20 \n");
-			sprintf(mscbstr, "!SENS:CURR:RANG:AUTO ON;\0");
-			return -1;
-			}
-
-			break;
-
-		case 'u':
-
-			if (range_param_value == 200)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-4;\0");
-			else if (range_param_value == 20)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-5;\0");
-			else if (range_param_value == 2)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-6;\0");
-			else
-			{
-				printf("Error, Value must be  : 2 , 20 or 200  \n");
-			sprintf(mscbstr, "!SENS:CURR:RANG:AUTO ON;\0");
-			return -1;
-			}
-			break;
-		case 'n':
-			if (range_param_value == 200)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-7;\0");
-			else if (range_param_value == 20)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-8;\0");
-			else if (range_param_value == 2)
-				sprintf(mscbstr, "!SENS:CURR:RANG 2E-9;\0");
-			else
-			{
-				printf("Error, Value must be  : 2 , 20 or 200  \n");
-			sprintf(mscbstr, "!SENS:CURR:RANG:AUTO ON;\0");
-			return -1;
-			}
-			break;
-
-		default:
-			printf("Error, Range must be  : m , u or n  \n");
-			sprintf(mscbstr, "!SENS:CURR:RANG:AUTO ON;\0");
-			return -1;
-		}
-	}	
-	printf("ready for writting:%s lenght: %i \n",mscbstr,strlen(mscbstr) );
-	mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr, strlen(mscbstr)+1);
-	ss_sleep(500);
-	return 0;
-};
 
  //-------------------------------------------------------
-float read_curr(){
+double read_curr(){
 	char mscbstr[64];
   int status, size;
-  
-  //	sprintf(mscbstr, "!SYST:ZCH ON;\0");
-  //	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  //	ss_sleep(250);
 
-  //	sprintf(mscbstr, "!RANG 2e-9;\0");
-  //	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  //	ss_sleep(250);
-
-  //	sprintf(mscbstr, "!INIT;\0");
-  //	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  //	ss_sleep(400);
-
-  //	sprintf(mscbstr, "!SYST:ZCOR:ACQ;\0");
-  //	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  //	ss_sleep(400);
-
-  //	sprintf(mscbstr, "!SYST:ZCOR ON;\0");
-  //	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  //	ss_sleep(400);
-
-	sprintf(mscbstr, "!RANG:AUTO ON;\0");
-  	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  	ss_sleep(400);
-
-  	sprintf(mscbstr, "!SYST:ZCH OFF;\0");
-  	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  	ss_sleep(500);
-
-	sprintf(mscbstr, "READ?;\0");
-	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-	ss_sleep(500);
+  sprintf(mscbstr, "READ?;");
+  printf("READ?;");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
+  printf("Status write : %i\n",status);
+  ss_sleep(3000); // wait for measurement to finish
 
   char reponse[64];
   size = sizeof(reponse);
-  reponse[size]='\0';
   status = mscb_read(lmscb_fd, pico_settings.dd.base_address[0], 2, &reponse, &size);
+  printf("response:%s| \n",reponse);
   if (status != MSCB_SUCCESS) {
     cm_msg(MINFO,"feSCPico","mscb_read failed [%d] on %d-ch%d"
 	   , status, pico_settings.dd.base_address[0], 2);
   }
-  //char *saveptr;
-//char *foo, *bar;
 
  char *c = strchr(reponse, 'A');
-  if (c != NULL) *c = 0; else return 0;
-  float value;
-
-  //foo = strtok_r(reponse, "E", &saveptr);
-  //bar = strtok_r(NULL, "E", &saveptr);
-  // char *cc = strchr(reponse, '+');
-  // if (c != NULL) *cc = '0'; else return 0;
-  // *bar=0;
-  // ++bar;
- value = (float)atof(reponse);
- // printf("reponse en float avec simple: %g",value);
- //float value2= (float)atof(bar);
- // float value3 = pow(10,-value2);
- // value=value*value3;	
-	return value;
+ if (c != NULL){ 
+   *c = 0;
+ }
+ else return 0;
+ double value;
+ value = atof(reponse);
+ return value;
 };
-  //Find the polaity of jonctions and set the global variable at 1 or -1;
-  int pol_finder(){
-    float cpos;
-    float cneg;
-    //   set_ilim(2);
-    set_v(2);
-    // ss_sleep(1000);
-    cpos=read_curr();
-    //  ss_sleep(1000);
- set_v(-2);
- // ss_sleep(1000);
- cneg=read_curr();
- // ss_sleep(1000);
- printf("CURR_POS: %g\n",cpos);
- printf("CURR_NEG: %g\n",cneg);
 
- if(cpos > -3*cneg)
-      {
-	printf("positif\n");
-	polarity=1;
-	 v_off();
-      }
-         else if(-1*cneg > 3*cpos)
-      {
-printf("negatif\n");
-	polarity=-1;
-	v_off();
-      } 
-    else
-      printf("Error, raise voltage or check devices\n");
-};
 
   /*-- Equipment list ------------------------------------------------*/
 
@@ -415,7 +163,7 @@ printf("negatif\n");
       TRUE,                   /* enabled */
       RO_ALWAYS |   /* read when running and on transitions */
       RO_ODB,                 /* and update ODB */
-      500,                  /* read every 20 sec */
+      3000,                  /* read every 3 sec */
       0,                      /* stop run after this event limit */
       0,                      /* number of sub events */
       1,                      /* log history */
@@ -457,101 +205,12 @@ printf("negatif\n");
 
 /*-- Sequencer callback info  --------------------------------------*/
 
-
-void seq_set_voltage(INT hDB, INT hseq, void *info)
-{
-float volt_set;
- int size,status;
-  if(pico_settings.SET_VOLTAGE==0)
-    {
-    v_off();
-    return;
-    }
-size = sizeof(volt_set); 
-  status = db_get_value(hDB, 0,"/Equipment/scPico/Settings/MAN_VOLT_SET", &volt_set, &size, TID_FLOAT, FALSE);
- set_v(volt_set);
-  return;
-}
-
-void seq_pol_finder(INT hDB, INT hseq, void *info)
-{
- if(pico_settings.POL_FINDER==0)
-    return;
-
- pol_finder();
-  // example db_set_value
-  BOOL flag=0;
-   db_set_value(hDB,0,"/equipment/scpico/settings/POL_FINDER", &flag, sizeof(flag), 1, TID_BOOL);
-  return;
-}
-void seq_set_ilim(INT hDB, INT hseq, void *info)
-{
-int ilim_set;
- int size,status;
-  if(pico_settings.SET_ILIMIT==0)
-    return;
-
-size = sizeof(ilim_set); 
-  status = db_get_value(hDB, 0,"/Equipment/scPico/Settings/I_LIMIT", &ilim_set, &size, TID_INT, FALSE);
- set_ilim(ilim_set);
-  // example db_set_value
-  BOOL flag=0;
-   db_set_value(hDB,0,"/equipment/scpico/settings/SET_ILIMIT", &flag, sizeof(flag), 1, TID_BOOL);
-  return;
-}
-void seq_set_current_range(INT hDB, INT hseq, void *info)
-{
-   int range_param_value;
-  char  range_param[2];
- int size,status;
-  if(pico_settings.SET_CURR_RANGE==0)
-    return;
-
- size = sizeof(range_param_value); 
-  status = db_get_value(hDB, 0,"/Equipment/scPico/Settings/CURRENT_RANGE_VALUE", &range_param_value, &size, TID_INT, FALSE);
-
-  size = sizeof(range_param); 
-  status = db_get_value(hDB, 0,"/Equipment/scPico/Settings/CURRENT_RANGE", &range_param[0], &size, TID_CHAR, FALSE);
-
- status=set_curr_range(range_param,range_param_value);
-  // example db_set_value
-  BOOL flag=0;
-   db_set_value(hDB,0,"/equipment/scpico/settings/SET_CURR_RANGE", &flag, sizeof(flag), 1, TID_BOOL);
-  return;
-}
-
-void seq_read_current(INT hDB, INT hseq, void *info)
-{
- int size,status;
-  if(pico_settings.READ_CURRENT==0)
-    return;
-  float valuee;
- valuee=read_curr();
-
-  // example db_set_value
- printf("response du seq:%g \n",valuee );
-  BOOL flag=0;
-   db_set_value(hDB,0,"/equipment/scpico/settings/READ_CURRENT", &flag, sizeof(flag), 1, TID_BOOL);
-  return;
-}
-
 /*-- Frontend Init -------------------------------------------------*/
 INT frontend_init()
 {
- char  mscbstr[64];
+  char  mscbstr[64];
+  int ival;
   int status, size;
-
-sprintf(mscbstr, "0\0");
-
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 3, mscbstr, strlen(mscbstr)+1);
- ss_sleep(1000);
-
-mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 5, mscbstr, strlen(mscbstr)+1);
- ss_sleep(1000);
-
-	sprintf(mscbstr, "!SYST:ZCH OFF;\0");
-  	status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
-  	ss_sleep(1100);
 
 
   /* hardware initialization */
@@ -562,79 +221,34 @@ mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 5, mscbstr, strlen(mscbst
     return status;
   }
   printf("localmscb_init status:%d\n", status);
+  ss_sleep(100);
 
-  // Setup Open record for notification
 
-  status = db_find_key(hDB, 0, "/equipment/scpico/settings/SET_VOLTAGE", &hmyFlag);
-  if (status == DB_SUCCESS) {
-    /* Enable hot-link on settings/ of the equipment */
-    if (hmyFlag) {
-      size = sizeof(BOOL);
-      if ((status = db_open_record(hDB, hmyFlag, &(pico_settings.SET_VOLTAGE)
-				   , size, MODE_READ
-				   , seq_set_voltage, NULL)) != DB_SUCCESS)
-	return status;
-    }
-  }else{
-    cm_msg(MERROR, "fepico", "cannot access SET_VOLTAGE");
-  }
+  printf("Resetting the picoammeter\n");
+  
+  sprintf(mscbstr, "*RST ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,5);
+  if(status != MSCB_SUCCESS)
+    printf("reset return status = %i\n",status);
+  ss_sleep(5000);
 
- status = db_find_key(hDB, 0, "/equipment/scpico/settings/SET_ILIMIT", &hmyFlag);
-  if (status == DB_SUCCESS) {
-    /* Enable hot-link on settings/ of the equipment */
-    if (hmyFlag) {
-      size = sizeof(BOOL);
-      if ((status = db_open_record(hDB, hmyFlag, &(pico_settings.SET_ILIMIT)
-				   , size, MODE_READ
-				   , seq_set_ilim, NULL)) != DB_SUCCESS)
-	return status;
-    }
-  }else{
-    cm_msg(MERROR, "fepico", "cannot access SET_ILIMT");
-  }
 
-status = db_find_key(hDB, 0, "/equipment/scpico/settings/SET_CURR_RANGE", &hmyFlag);
-  if (status == DB_SUCCESS) {
-    /* Enable hot-link on settings/ of the equipment */
-    if (hmyFlag) {
-      size = sizeof(BOOL);
-      if ((status = db_open_record(hDB, hmyFlag, &(pico_settings.SET_CURR_RANGE)
-				   , size, MODE_READ
-				   , seq_set_current_range, NULL)) != DB_SUCCESS)
-	return status;
-    }
-  }else{
-    cm_msg(MERROR, "fepico", "cannot access SET_CURR-RANGE");
-  }
+  sprintf(mscbstr, "0");
+  
+  ival = 0;
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 3, &ival, sizeof(ival));
+  if(status != MSCB_SUCCESS)
+    printf("Reset address 3; status = %i.\n",status);
+  ss_sleep(1000);
+  
 
-status = db_find_key(hDB, 0, "/equipment/scpico/settings/READ_CURRENT", &hmyFlag);
-  if (status == DB_SUCCESS) {
-    /* Enable hot-link on settings/ of the equipment */
-    if (hmyFlag) {
-      size = sizeof(BOOL);
-      if ((status = db_open_record(hDB, hmyFlag, &(pico_settings.READ_CURRENT)
-				   , size, MODE_READ
-				   , seq_read_current, NULL)) != DB_SUCCESS)
-	return status;
-    }
-  }else{
-    cm_msg(MERROR, "fepico", "cannot access READ_CURRENT");
-  }
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 5, &ival, sizeof(ival));
+  if(status != MSCB_SUCCESS)
+    printf("Reset address 5; status = %i.\n",status);
+  ss_sleep(1000);
 
-status = db_find_key(hDB, 0, "/equipment/scpico/settings/POL_FINDER", &hmyFlag);
-  if (status == DB_SUCCESS) {
-    /* Enable hot-link on settings/ of the equipment */
-    if (hmyFlag) {
-      size = sizeof(BOOL);
-      if ((status = db_open_record(hDB, hmyFlag, &(pico_settings.POL_FINDER)
-				   , size, MODE_READ
-				   , seq_pol_finder, NULL)) != DB_SUCCESS)
-	return status;
-    }
-  }else{
-    cm_msg(MERROR, "fepico", "cannot access POL_FINDER");
-  }
 
+   printf("Finished reset\n");
 
   return status;
 }
@@ -658,8 +272,6 @@ INT begin_of_run(INT run_number, char *error)
   float volt_set;
   int i_lim;
 
-  begin_run=1;
-
   // Get handle of the ODB for that experiment
   cm_get_experiment_database(&hDB, NULL);
   
@@ -682,14 +294,6 @@ size = sizeof(i_lim);
       cm_msg(MERROR,"BOR","cannot get value");
       return FE_ERR_ODB;
     }
- printf("range :%s \n",range_param );
- printf("range_value :%i \n",range_param_value );
-
- status=set_curr_range(range_param,range_param_value);
-
-
-size = sizeof(mscbstr);
- printf("size :%i len:  %i \n",size,strlen(mscbstr) );
 
 
   return SUCCESS;
@@ -698,7 +302,6 @@ size = sizeof(mscbstr);
 /*-- End of Run ----------------------------------------------------*/
 INT end_of_run(INT run_number, char *error)
 {
-  begin_run=0;
   return SUCCESS;
 }
 
@@ -764,25 +367,27 @@ extern "C" INT interrupt_configure(INT cmd, INT source, POINTER_T adr)
 INT read_mscb_event(char *pevent, INT off)
 {
   int status, size;
-  float *pfdata;
+  double *pfdata;
   char mscbstr[64];
  
-  //  printf(" In read_mscb_event()\n");
+  printf(" In read_mscb_event()\n");
+  double curr=read_curr();
 
   /* init bank structure */
-   bk_init(pevent);
-
+  bk_init(pevent);
+  
+#if 1
   /* create Pico bank */
-   bk_create(pevent, "PICO", TID_FLOAT, (void **) &pfdata);
-   if(begin_run==1)
-     { float curr=read_curr();
-  ss_sleep(200);
-   *pfdata++ = curr;
- printf("valeur dans la banque: %g \n",curr);
-     }
+  bk_create(pevent, "PICO", TID_DOUBLE, (void **) &pfdata);
 
-   bk_close(pevent, pfdata);
-    
+  *pfdata++ = curr;
+  printf("valeur dans la banque: %e \n",curr);
+  
+  
+  bk_close(pevent, pfdata);
+  printf("size %i\n", bk_size(pevent));
+#endif
+
 #if 0
   /* init bank structure */
   bk_init(pevent);
@@ -795,7 +400,7 @@ INT read_mscb_event(char *pevent, INT off)
     cm_msg(MINFO,"feSCPico","mscb_read failed [%d] on %d-ch%d"
 	   , status, pico_settings.dd.base_address[0], 2);
   }
-  //  printf("response:%s [%d]\n", mscbstr, status);
+  printf("response:%s [%d]\n", mscbstr, status);
 
   char *c = strchr(mscbstr, 'A');
   if (c != NULL) *c = 0; else return 0;
