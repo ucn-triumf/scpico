@@ -257,7 +257,7 @@ INT frontend_init()
     printf("zch on return status = %i\n",status);
   ss_sleep(10000);
 
-  sprintf(mscbstr, "RANG 0.0002 ");
+  sprintf(mscbstr, "RANG 0.00002 ");
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,12);
   if(status != MSCB_SUCCESS)  printf("rang return status = %i\n",status);
   ss_sleep(1000);
