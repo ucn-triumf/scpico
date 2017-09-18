@@ -226,14 +226,15 @@ INT frontend_init()
 
   printf("Resetting the picoammeter\n");
   
-  sprintf(mscbstr, "*RST ");
-  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,5);
+  sprintf(mscbstr, "*RST                    ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,24);
   if(status != MSCB_SUCCESS)
     printf("reset return status = %i\n",status);
   ss_sleep(5000);
 
 
   sprintf(mscbstr, "0");
+
   
   ival = 0;
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 3, &ival, sizeof(ival));
@@ -246,6 +247,77 @@ INT frontend_init()
   if(status != MSCB_SUCCESS)
     printf("Reset address 5; status = %i.\n",status);
   ss_sleep(1000);
+
+  printf("Setting range %s \n", mscbstr);
+
+  sprintf(mscbstr, "SYST:ZCH ON         ");
+  printf(" %s \n", mscbstr);
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,20);
+  if(status != MSCB_SUCCESS)
+    printf("zch on return status = %i\n",status);
+  ss_sleep(10000);
+
+  sprintf(mscbstr, "RANG 0.0002 ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,12);
+  if(status != MSCB_SUCCESS)  printf("rang return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "INIT          ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS) printf("init return status = %i\n",status);
+  ss_sleep(1000);
+
+  sprintf(mscbstr, "SYST:ZCOR:ACQ ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS)  printf("zcor:acq return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "SYST:ZCH OFF  ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS)  printf("zch off return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "SYST:ZCOR ON  ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS) printf("zcor on return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "MED 0         ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS) printf("med return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "AVER ON       ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS)  printf("aver return status = %i\n",status);
+  ss_sleep(1000);
+  sprintf(mscbstr, "AVER:COUNt 100 ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,15);
+  if(status != MSCB_SUCCESS) printf("avg:count return status = %i\n",status);
+  ss_sleep(1000);
+
+
+  
+  printf("Checking parameters\n");
+  sprintf(mscbstr, "AVER?          ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,15);
+  if(status != MSCB_SUCCESS)
+    printf("aver return status = %i\n",status);
+  ss_sleep(3000);
+
+
+
+  sprintf(mscbstr, "ZCH?");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,5);
+  if(status != MSCB_SUCCESS)
+    printf("aver return status = %i\n",status);
+  ss_sleep(3000);
+
+  sprintf(mscbstr, "ZCOR?");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,5);
+  if(status != MSCB_SUCCESS)
+    printf("aver return status = %i\n",status);
+  ss_sleep(3000);
+
+
+
+
+
 
 
    printf("Finished reset\n");
