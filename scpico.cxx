@@ -129,7 +129,7 @@ double read_curr(){
   printf("READ?;");
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,strlen(mscbstr)+1);
   printf("Status write : %i\n",status);
-  ss_sleep(3000); // wait for measurement to finish
+  ss_sleep(2200); // wait for measurement to finish
 
   char reponse[64];
   size = sizeof(reponse);
@@ -278,18 +278,32 @@ INT frontend_init()
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
   if(status != MSCB_SUCCESS) printf("zcor on return status = %i\n",status);
   ss_sleep(2000);
-  sprintf(mscbstr, "MED 0         ");
+  //sprintf(mscbstr, "MED 0         ");
+  /// status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  //if(status != MSCB_SUCCESS) printf("med return status = %i\n",status);
+  //ss_sleep(2000);
+
+  //sprintf(mscbstr, "MED:RANK 5    ");
+  //status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  //if(status != MSCB_SUCCESS) printf("med return status = %i\n",status);
+  //ss_sleep(2000);
+  sprintf(mscbstr, "MED OFF       ");
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
   if(status != MSCB_SUCCESS) printf("med return status = %i\n",status);
-  ss_sleep(2000);
-  sprintf(mscbstr, "AVER ON       ");
-  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
-  if(status != MSCB_SUCCESS)  printf("aver return status = %i\n",status);
   ss_sleep(2000);
   sprintf(mscbstr, "AVER:COUNt 100 ");
   status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,15);
   if(status != MSCB_SUCCESS) printf("avg:count return status = %i\n",status);
   ss_sleep(2000);
+  sprintf(mscbstr, "AVER:TCON MOV  ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,15);
+  if(status != MSCB_SUCCESS) printf("avg:count return status = %i\n",status);
+  ss_sleep(2000);
+  sprintf(mscbstr, "AVER ON       ");
+  status = mscb_write(lmscb_fd, pico_settings.dd.base_address[0], 1, mscbstr,14);
+  if(status != MSCB_SUCCESS)  printf("aver return status = %i\n",status);
+  ss_sleep(2000);
+
   
 
 
@@ -417,6 +431,8 @@ INT read_mscb_event(char *pevent, INT off)
  
   printf(" In read_mscb_event()\n");
   double curr=read_curr();
+
+  if(curr == 0.0) return 0;
 
   /* init bank structure */
   bk_init(pevent);
