@@ -42,7 +42,8 @@ extern "C" {
   /* buffer size to hold events */
   INT event_buffer_size = 100 * 10000;
 
-  char const mydevname[] = {"GPIB410"};
+  //char const mydevname[] = {"GPIB410"};  
+  char const mydevname[] = {"mscb509"};
   HNDLE hDB, hDD, hSet, hControl;
 
 #define PICO_SETTINGS_STR(_name) char const *_name[] = {\
@@ -497,11 +498,14 @@ INT localmscb_init(char const *eqname)
   //  status = db_create_record(hDB, hSet, "DD", LMSCB_SETTINGS_STR);
 
   status = db_find_key(hDB, 0, set_str, &hSet);
+  printf("Checking ODB %i\n",status);
   status = db_find_key(hDB, hSet, "DD", &hDD);
+  printf("Checking ODB %i\n",status);
   if (status == DB_SUCCESS) {
     size = sizeof(pico_settings.dd);
     db_get_record(hDB, hDD, &(pico_settings.dd), &size, 0);
-    
+
+    printf("Opening device %s\n",pico_settings.dd.mscb_device);
     /* open device on MSCB */
     lmscb_fd = mscb_init(pico_settings.dd.mscb_device, NAME_LENGTH, pico_settings.dd.mscb_pwd, FALSE);
     if (lmscb_fd < 0) {
@@ -510,16 +514,6 @@ INT localmscb_init(char const *eqname)
 	     pico_settings.dd.mscb_device);
       return FE_ERR_HW;
     }
-    
-#if 0
-    // check if FGD devices are alive 
-    status = mscb_ping(lmscb_fd, pico_settings.dd.base_address[0], 1);
-    if (status != FE_SUCCESS) {
-      cm_msg(MERROR, "mscb_init",
-	     "Cannot ping MSCB address 0. Check power and connection.");
-      return FE_ERR_HW;
-    }
-#endif
     
     // Check for right device
     status = mscb_info(lmscb_fd, pico_settings.dd.base_address[0], &node_info);
