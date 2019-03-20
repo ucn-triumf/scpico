@@ -307,7 +307,7 @@ INT frontend_init()
 
   
 
-
+cm_msg(MINFO,"feSCPico","Started the scpico frontend");
    printf("Finished reset\n");
 
   return status;
