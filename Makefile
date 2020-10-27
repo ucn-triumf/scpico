@@ -63,7 +63,7 @@ endif
 DRV_DIR    = $(MIDASSYS)/drivers
 MSCB_DIR   = $(MIDASSYS)/../mscb
 INC_DIR    = $(MIDASSYS)/include
-LIB_DIR    = $(MIDASSYS)/linux/lib
+LIB_DIR    = $(MIDASSYS)/lib
 SRC_DIR    = $(MIDASSYS)/src
 #-------------------------------------------------------------------
 # Frontend code name defaulted to frontend in this example.

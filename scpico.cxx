@@ -15,9 +15,6 @@
 //#include "fonctions_pico.h"
 
 /* make frontend functions callable from the C framework */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
   /*-- Globals -------------------------------------------------------*/
 
@@ -44,7 +41,8 @@ extern "C" {
 
   //char const mydevname[] = {"GPIB410"};  
   char const mydevname[] = {"mscb509"};
-  HNDLE hDB, hDD, hSet, hControl;
+  extern HNDLE hDB;
+  HNDLE hDD, hSet, hControl;
 
 #define PICO_SETTINGS_STR(_name) char const *_name[] = {\
     "[DD]",\
@@ -116,9 +114,6 @@ HNDLE hmyFlag;
   void seq_callback(INT hDB, INT hseq, void *info);
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 
  //-------------------------------------------------------
@@ -175,9 +170,7 @@ double read_curr(){
     {""}
   };
 
-#ifdef __cplusplus
-}
-#endif
+
 
 /********************************************************************\
               Callback routines for system transitions
@@ -305,7 +298,10 @@ INT frontend_init()
   if(status != MSCB_SUCCESS)  printf("aver return status = %i\n",status);
   ss_sleep(2000);
 
-  
+  // Set up so that scpico does BOR after the digitizers
+  // and does EOR before the digitizers
+  cm_set_transition_sequence(TR_START, 550);
+  cm_set_transition_sequence(TR_STOP, 450);
 
 cm_msg(MINFO,"feSCPico","Started the scpico frontend");
    printf("Finished reset\n");
@@ -390,7 +386,7 @@ INT frontend_loop()
 // Readout routines for different events
 /*-- Trigger event routines ----------------------------------------*/
 
-extern "C" INT poll_event(INT source, INT count, BOOL test)
+INT poll_event(INT source, INT count, BOOL test)
 /* Polling routine for events. Returns TRUE if event
    is available. If test equals TRUE, don't return. The test
    flag is used to time the polling */
@@ -408,7 +404,7 @@ extern "C" INT poll_event(INT source, INT count, BOOL test)
 }
 
 /*-- Interrupt configuration ---------------------------------------*/
-extern "C" INT interrupt_configure(INT cmd, INT source, POINTER_T adr)
+INT interrupt_configure(INT cmd, INT source, POINTER_T adr)
 {
   switch (cmd) {
   case CMD_INTERRUPT_ENABLE:
@@ -526,5 +522,5 @@ INT localmscb_init(char const *eqname)
     printf("device %s found\n", node_info.node_name);
   }
   return FE_SUCCESS;
-}}
+}
 
